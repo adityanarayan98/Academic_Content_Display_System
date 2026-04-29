@@ -353,10 +353,8 @@ $(document).ready(function() {
     startSlideshow();
 });
 </script>
-
 <footer style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 5px; background: rgba(248, 249, 250, 0.9); font-size: 12px; z-index: 1000;">
     &copy; 2026 Aditya Narayan Sahoo. Licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>. <a href="https://github.com/adityanarayan98" target="_blank">GitHub</a> | <a href="https://sites.google.com/view/adityanarayansahoo/" target="_blank">Website</a>
 </footer>
-
 </body>
 </html>
