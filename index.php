@@ -22,6 +22,32 @@
       position: relative;
     }
 
+    /* Start overlay */
+    #startOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      color: white;
+      font-size: 24px;
+    }
+
+    #startButton {
+      padding: 20px 40px;
+      font-size: 24px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
     /* Preview mode */
     .preview-mode {
       background: #f8f9fa !important;
@@ -48,7 +74,7 @@
       height: auto !important;
       max-height: 80vh !important;
     }
-  
+
     #slideshow {
       height: 100vh;
       width: 100vw;
@@ -111,7 +137,6 @@
       image-rendering: optimizeQuality;
       -webkit-font-smoothing: antialiased;
     }
-
 
 
 
@@ -203,7 +228,7 @@
         $isVideo = in_array($ext, ['mp4', 'avi', 'mov', 'wmv']);
         echo '<div class="slide ' . ($isActive ? 'active' : '') . '">';
         if ($isVideo) {
-            echo '<video playsinline preload="auto" autoplay><source src="' . $item . '?t=' . time() . '" type="video/' . $ext . '"></video>';
+            echo '<video muted playsinline preload="auto" autoplay><source src="' . $item . '?t=' . time() . '" type="video/' . $ext . '"></video>';
         } else {
             echo '<img src="' . $item . '?t=' . time() . '" alt="Media">';
         }
@@ -214,6 +239,11 @@
 </div>
 
 <script>
+// Enable autoplay by playing silent audio
+var audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DyvmMcBj+Q1/LNeCwFJHLH8N6QQgoUXrHp66hVFApGn+DY');
+audio.volume = 0.01;
+audio.play().catch(() => {});
+
 var currentFolder = '<?= $folder ?>';
 var currentMedia = <?= json_encode($media) ?>;
 var slideshowInterval;
@@ -246,7 +276,7 @@ function updateSlideshow(media) {
         var isVideo = ['mp4', 'avi', 'mov', 'wmv'].includes(ext);
         var html = '<div class="slide ' + activeClass + '">';
         if (isVideo) {
-            html += '<video playsinline preload="auto" autoplay><source src="' + item + '?t=' + Date.now() + '" type="video/' + ext + '"></video>';
+            html += '<video muted playsinline preload="auto" autoplay><source src="' + item + '?t=' + Date.now() + '" type="video/' + ext + '"></video>';
         } else {
             html += '<img src="' + item + '?t=' + Date.now() + '" alt="Media">';
         }
@@ -281,11 +311,18 @@ function startSlideshow() {
                 clearTimeout(slideshowInterval);
                 var duration = video.duration * 1000; // in ms
                 if (duration > 0) {
-                    video.play();
-                    slideshowInterval = setTimeout(function() {
-                        currentIndex = (index + 1) % slides.length;
-                        showSlide(currentIndex);
-                    }, duration);
+                    video.play().then(() => {
+                        slideshowInterval = setTimeout(function() {
+                            currentIndex = (index + 1) % slides.length;
+                            showSlide(currentIndex);
+                        }, duration);
+                    }).catch(() => {
+                        // Play failed, use fallback
+                        slideshowInterval = setTimeout(function() {
+                            currentIndex = (index + 1) % slides.length;
+                            showSlide(currentIndex);
+                        }, 10000);
+                    });
                 } else {
                     // If duration 0, advance immediately
                     currentIndex = (index + 1) % slides.length;
