@@ -1,0 +1,25 @@
+{
+    "folders": {
+        "TV": {
+            "timer": 5,
+            "sequence": [],
+            "orientation": "landscape"
+        },
+        "Front_display": {
+            "timer": 3,
+            "sequence": [
+                "YTDown_YouTube_What-is-ORCID-_ORCID-Org_Media_a1Rijk_TMHA_001_720p.mp4",
+                "1000166844.jpg"
+            ],
+            "orientation": "portrait"
+        },
+        "iq3": {
+            "timer": 5,
+            "sequence": [],
+            "orientation": "landscape"
+        }
+    },
+    "users": {
+        "Circulation": "$2y$10$wAB3r8mAu5kgd1Lfk9w63ukX7MBOWO\/eJOGlacq0bgGajrdWnwcyq"
+    }
+}
