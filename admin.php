@@ -330,6 +330,42 @@ if (isset($_POST['delete_temp'])) {
             .temp-grid .temp-list-overlay { display: none; }
             .temp-list .temp-grid-overlay { display: none; }
             .temp-overlay button, .temp-overlay a, .temp-list-overlay button, .temp-list-overlay a { font-size: 12px; padding: 2px 3px; }
+            
+            /* Video play triangle indicator */
+            .video-play-indicator {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 0;
+                height: 0;
+                border-top: 20px solid transparent;
+                border-bottom: 20px solid transparent;
+                border-left: 30px solid rgba(255, 255, 255, 0.7);
+                pointer-events: none;
+                z-index: 5;
+                transition: opacity 0.2s;
+            }
+            
+            /* No hover change - stays same opacity always */
+            .temp-item:hover .video-play-indicator {
+                opacity: 0;
+            }
+            
+            /* Video play indicator stays directly inside the thumbnail image, perfectly centered */
+            .image-card .col-2 {
+                position: relative;
+            }
+            
+            .image-card .video-play-indicator {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                border-top: 15px solid transparent;
+                border-bottom: 15px solid transparent;
+                border-left: 22px solid rgba(255, 255, 255, 0.7);
+            }
         </style>
     </head>
     <body>
@@ -451,6 +487,7 @@ if (isset($_POST['delete_temp'])) {
                                      echo '<div class="temp-media-container">';
                                      if ($isVideo) {
                                          echo '<video class="temp-media" preload="metadata"><source src="' . $tempDir . '/' . htmlspecialchars($file) . '"></video>';
+                                         echo '<div class="video-play-indicator"></div>';
                                      } else {
                                          echo '<img src="' . $tempDir . '/' . htmlspecialchars($file) . '" class="temp-media" alt="' . htmlspecialchars($file) . '">';
                                      }
@@ -494,11 +531,13 @@ if (isset($_POST['delete_temp'])) {
                                                     <span class="drag-handle">⋮⋮</span>
                                                 </div>
                                                 <div class="col-2">
-                                                    <?php if (in_array(strtolower(pathinfo($item, PATHINFO_EXTENSION)), ['mp4', 'avi', 'mov', 'wmv'])): ?>
-                                                        <video class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;"><source src="<?= $item ?>" type="video/<?= strtolower(pathinfo($item, PATHINFO_EXTENSION)) ?>"></video>
-                                                    <?php else: ?>
-                                                        <img src="<?= $item ?>" class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;">
-                                                    <?php endif; ?>
+                                                <?php $isVideo = in_array(strtolower(pathinfo($item, PATHINFO_EXTENSION)), ['mp4', 'avi', 'mov', 'wmv']); ?>
+                                                <?php if ($isVideo): ?>
+                                                    <video class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;"><source src="<?= $item ?>" type="video/<?= strtolower(pathinfo($item, PATHINFO_EXTENSION)) ?>"></video>
+                                                    <div class="video-play-indicator"></div>
+                                                <?php else: ?>
+                                                    <img src="<?= $item ?>" class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;">
+                                                <?php endif; ?>
                                                 </div>
                                                 <div class="col-6">
                                                     <div class="card-body">
