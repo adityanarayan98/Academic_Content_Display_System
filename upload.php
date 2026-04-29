@@ -4,6 +4,13 @@ require_login();
 
 $folder = isset($_POST['folder']) ? $_POST['folder'] : 'iq3';
 
+// Validate folder is allowed (exists in settings)
+if (!is_folder_allowed($folder)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Invalid folder']);
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_FILES['image'])) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid request']);
