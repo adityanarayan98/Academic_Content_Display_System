@@ -5,6 +5,12 @@ define('IMAGE_FOLDER', 'iq3');
 define('MAX_FILE_SIZE', 500 * 1024 * 1024); // 500MB
 define('ALLOWED_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
 define('SETTINGS_FILE', __DIR__ . '/settings.json');
+define('TEMP_FOLDER', __DIR__ . '/temp');
+
+// Auto create temp folder if not exists
+if (!is_dir(TEMP_FOLDER)) {
+    mkdir(TEMP_FOLDER, 0755, true);
+}
 
 // Initialize settings file if not exists
 if (!file_exists(SETTINGS_FILE)) {
@@ -19,7 +25,22 @@ if (!file_exists(SETTINGS_FILE)) {
     ]));
 }
 
+function get_allowed_folders() {
+    $allSettings = json_decode(file_get_contents(SETTINGS_FILE), true);
+    $folders = array_keys($allSettings['folders'] ?? []);
+    return empty($folders) ? ['iq3'] : $folders;
+}
+
+function is_folder_allowed($folder) {
+    return in_array($folder, get_allowed_folders());
+}
+
 function get_settings($folder = 'iq3') {
+    // Only allow folders that exist in settings
+    if (!is_folder_allowed($folder)) {
+        $folder = reset(get_allowed_folders());
+    }
+    
     $allSettings = json_decode(file_get_contents(SETTINGS_FILE), true);
     if (!isset($allSettings['folders'][$folder])) {
         $allSettings['folders'][$folder] = ['timer' => 5, 'sequence' => [], 'orientation' => 'landscape'];
