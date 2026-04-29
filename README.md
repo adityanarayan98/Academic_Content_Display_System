@@ -2,6 +2,24 @@
 
 A web-based slideshow display system for managing and showing images and videos in projects with customizable settings.
 
+## Features
+
+- **Project-Based Organization**: Create and manage separate projects with their own media collections.
+- **Slideshow Display**: Automatic full-screen slideshow playback of images and videos.
+- **Media Support**: Upload and display images (JPG, PNG, GIF) and videos (MP4, AVI, MOV, WMV).
+- **Admin Panel**: Secure login with user management, media uploads, and settings configuration.
+- **Real-Time Updates**: Slideshow automatically refreshes every 5 seconds to show new content.
+- **Orientation Modes**: Support for landscape and portrait display orientations.
+- **Temporary Media Staging**: Upload files to a temp folder, then add them to projects via drag-and-drop or buttons.
+- **Media Management**: View, reorder, duplicate, download, and delete media files.
+- **Custom Sequencing**: Drag-and-drop to customize slideshow order.
+- **Bulk Upload**: Upload multiple files at once.
+- **Preview Mode**: Test slideshow in a scaled-down window.
+- **Responsive Design**: Adapts to any screen size and orientation.
+- **Video Playback**: Autoplay videos with duration-based timing and muted audio.
+- **User Authentication**: Multi-user support with hashed passwords and math captcha.
+- **AJAX Interface**: Real-time updates without page reloads.
+
 ## Requirements
 
 - **Web Server**: Apache (recommended with XAMPP for local development)
@@ -64,39 +82,56 @@ After login, you'll see:
 
 ### 7. Uploading Media
 
-1. Select the target project.
-2. In "Upload Images", choose files (multiple selection allowed).
-3. Supported formats: JPG, PNG, GIF, MP4, AVI, MOV, WMV.
-4. Max file size: 500MB per file.
-5. Click "Upload".
-6. Files are added to the sequence and appear in the media list.
+1. In "Upload Images", choose files (multiple selection allowed).
+2. Supported formats: JPG, PNG, GIF, MP4, AVI, MOV, WMV.
+3. Max file size: 500MB per file.
+4. Click "Upload".
+5. Files are uploaded to the temp folder with unique names to avoid conflicts.
 
-### 8. Managing Media
+### 8. Managing Temp Media
+
+- Temp media are stored in a temporary folder with unique names.
+- View in grid or list mode; toggle with buttons.
+- Hover over grid items to see View, Add, and Delete icons.
+- Click "View" to preview in modal.
+- Click "Add" to copy file to current project (keeps original in temp).
+- Drag and drop items to media list to move them to project.
+- Click "Del" to delete from temp.
+
+### 9. Managing Media
 
 - **View**: Click the "View" button to preview media in a modal.
+- **Add**: Click the "Add" button in the view modal to duplicate the media in the project (creating a copy) or copy from temp to project if viewing temp media.
 - **Reorder**: Drag and drop media cards to change sequence.
 - Click "Save Order" after reordering.
 - **Delete**: Click "Delete" on a media card, confirm deletion.
 
-### 9. User Management (Admin)
+### 10. Managing Temp Media
+
+- Temp media are stored in a temporary folder.
+- View thumbnails in the "Temp Media" section on the left.
+- Drag and drop temp items onto the media list to add them to the current project.
+- Click "Del" to delete temp files and free up storage.
+
+### 11. User Management (Admin)
 
 - Click "User Management" to add/edit users for restricted access.
 - Add users with username/password.
 - Users can view slideshows but not admin functions.
 
-### 10. Viewing the Slideshow
+### 12. Viewing the Slideshow
 
 - From project selection, click a project to start the slideshow.
 - Slideshow runs automatically based on timer settings.
 - Videos play with audio muted; duration based on video length or fallback to timer.
 - Press F11 for fullscreen.
 
-### 11. Preview Mode
+### 13. Preview Mode
 
 - In admin panel, click "Preview Slideshow" to view in a smaller window.
 - Useful for testing without fullscreen.
 
-### 12. Logout
+### 14. Logout
 
 - Click "Logout" in admin panel or add `?logout` to URL.
 
@@ -132,6 +167,7 @@ After login, you'll see:
 - Limited support in Opera Mini and smart TV browsers (videos may not play due to proxy rendering or limited HTML5 support).
 - For smart TVs, videos may not auto-play; consider using images only or connecting a computer with a full browser to the TV.
 - Ensure JavaScript and HTML5 video support enabled.
+- Note: Videos auto-play if browser allows; otherwise, slideshow advances automatically after 10 seconds per video.
 
 ## Author
 
