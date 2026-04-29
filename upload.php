@@ -89,7 +89,7 @@ if (is_array($files['name'])) {
 // Update sequence with all uploaded files
 if (!empty($uploadedFiles)) {
     $settings = get_settings($folder);
-    $settings['sequence'] = array_merge($settings['sequence'], $uploadedFiles);
+    $settings['sequence'] = array_unique(array_merge($settings['sequence'], $uploadedFiles));
     save_settings($folder, $settings);
 }
 
