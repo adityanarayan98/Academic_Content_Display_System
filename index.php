@@ -183,9 +183,9 @@
                         <h2 class="text-center mb-4">Select Project</h2>
                                         <div class="row">
                             <?php
-                            $folders = array_filter(glob('*'), function($dir) {
-                                return is_dir($dir) && !in_array($dir, ['.', '..', '.kilo', '.kilocode']);
-                            });
+                            // Load projects from settings
+                            $allSettings = json_decode(file_get_contents(SETTINGS_FILE), true);
+                            $folders = array_keys($allSettings['folders'] ?? []);
                             $projects = [];
                             foreach ($folders as $f) {
                                 $settings = get_settings($f);
@@ -216,6 +216,13 @@
     }
 
     $folder = $_GET['folder'];
+    
+    // Validate folder is allowed (exists in settings)
+    if (!is_folder_allowed($folder)) {
+        header('Location: index.php');
+        exit;
+    }
+    
     $media = get_all_media($folder);
     $settings = get_settings($folder);
 ?>
@@ -346,6 +353,7 @@ $(document).ready(function() {
     startSlideshow();
 });
 </script>
+
 <footer style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 5px; background: rgba(248, 249, 250, 0.9); font-size: 12px; z-index: 1000;">
     &copy; 2026 Aditya Narayan Sahoo. Licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>. <a href="https://github.com/adityanarayan98" target="_blank">GitHub</a> | <a href="https://sites.google.com/view/adityanarayansahoo/" target="_blank">Website</a>
 </footer>
