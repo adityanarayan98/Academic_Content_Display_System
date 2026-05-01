@@ -170,6 +170,38 @@ sudo restorecon -Rv /var/www/html/Display/
 
 ---
 
+### 4.1 PHP Configuration (IMPORTANT)
+
+For large file uploads you must configure PHP properly.
+
+**Find your php.ini file:**
+```bash
+# Ubuntu/Debian
+sudo nano /etc/php/8.1/apache2/php.ini
+
+# CentOS/RHEL
+sudo nano /etc/php.ini
+```
+
+**Set these EXACT values:**
+```ini
+upload_max_filesize = 512M
+post_max_size = 512M
+max_execution_time = 180
+max_input_time = 180
+memory_limit = 256M
+file_uploads = On
+```
+
+**Restart Apache after changes:**
+```bash
+sudo systemctl restart apache2
+```
+
+✅ These settings allow uploads up to 500MB per file.
+
+---
+
 ## 5. Automatic Startup on Boot
 
 ✅ **Apache starts automatically on boot by default**
