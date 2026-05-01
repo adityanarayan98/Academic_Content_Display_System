@@ -39,11 +39,13 @@ foreach ($folders as $f) {
 }
 
 if (!is_logged_in()) {
-    // Generate math question
-    $num1 = rand(1, 10);
-    $num2 = rand(1, 10);
-    $_SESSION['admin_math_num1'] = $num1;
-    $_SESSION['admin_math_num2'] = $num2;
+    // Generate math question ONLY if not already set
+    if (!isset($_SESSION['admin_math_num1']) || !isset($_SESSION['admin_math_num2'])) {
+        $num1 = rand(1, 10);
+        $num2 = rand(1, 10);
+        $_SESSION['admin_math_num1'] = $num1;
+        $_SESSION['admin_math_num2'] = $num2;
+    }
     ?>
     <!DOCTYPE html>
     <html lang="en">
@@ -52,6 +54,7 @@ if (!is_logged_in()) {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     </head>
     <body class="bg-light">
         <div class="container mt-5">
@@ -60,26 +63,70 @@ if (!is_logged_in()) {
                     <div class="card">
                         <div class="card-body">
                             <h3 class="card-title text-center">Admin Login</h3>
-                            <form method="post">
+                                <?php 
+        $login_error = '';
+        $saved_username = '';
+        
+        // Check for error message from redirect
+        if (isset($_SESSION['login_error'])) {
+            $login_error = $_SESSION['login_error'];
+            $saved_username = $_SESSION['login_username'] ?? '';
+            unset($_SESSION['login_error']);
+            unset($_SESSION['login_username']);
+            
+            // Generate NEW FRESH CAPTCHA on every failed attempt
+            // Removed - will auto generate new on next page load
+        }
+        
+        // Login processing is now handled automatically in auth.php
+    ?>
+    <form method="post">
                                 <div class="form-group">
                                     <label>Username</label>
-                                    <input type="text" name="username" class="form-control" required autofocus>
+                                    <input type="text" name="username" class="form-control" required autofocus value="<?php echo htmlspecialchars($saved_username); ?>">
                                 </div>
                                 <div class="form-group">
                                     <label>Password</label>
-                                    <input type="password" name="password" class="form-control" required>
+                                    <div class="input-group">
+                                        <input type="password" name="password" id="passwordInput" class="form-control" required>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="togglePassword" title="Show password" onclick="
+                                                const input = document.getElementById('passwordInput');
+                                                const icon = this.querySelector('i');
+                                                if (input.type === 'password') {
+                                                    input.type = 'text';
+                                                    icon.classList.remove('fa-eye');
+                                                    icon.classList.add('fa-eye-slash');
+                                                } else {
+                                                    input.type = 'password';
+                                                    icon.classList.remove('fa-eye-slash');
+                                                    icon.classList.add('fa-eye');
+                                                }
+                                            ">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="form-group">
-                                    <label>What is <?php echo $num1; ?> + <?php echo $num2; ?>?</label>
+                                    <label>What is <?php echo $_SESSION['admin_math_num1']; ?> + <?php echo $_SESSION['admin_math_num2']; ?>?</label>
                                     <input type="number" name="math_answer" class="form-control" required>
                                 </div>
                                 <button type="submit" name="login" class="btn btn-primary btn-block">Login</button>
-                            </form>
+
+                                <?php if ($login_error): ?>
+                                    <div class="alert alert-danger mt-3"><?php echo $login_error; ?></div>
+                                <?php endif; ?>
+                        </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <footer style="text-align: center; padding: 10px; background: #f8f9fa; position: fixed; bottom: 0; width: 100%; z-index: 1000;">
+                &copy; 2026 Aditya Narayan Sahoo. Licensed under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank">CC BY 4.0</a>. <a href="https://github.com/adityanarayan98" target="_blank">GitHub</a> | <a href="https://sites.google.com/view/adityanarayansahoo/" target="_blank">Website</a>
+            </footer>
     </body>
     </html>
     <?php
@@ -101,7 +148,7 @@ if (!is_logged_in()) {
                     $uploadErrors[] = "File too large: $filename";
                     continue;
                 }
-                $newFilename = time() . '_' . $filename; // Unique name to avoid conflicts
+                $newFilename = time() . '_' . uniqid() . '_' . $filename; // Unique name to avoid conflicts
                 $tempDestination = $tempDir . '/' . $newFilename;
                 if (move_uploaded_file($_FILES['image']['tmp_name'][$index], $tempDestination)) {
                     $uploadedFiles[] = $newFilename;
@@ -127,68 +174,114 @@ if (!is_logged_in()) {
             if ($selectedFolder !== 'temp') {
                 $message .= " and added to project";
             }
-            $_SESSION['message'] = $message . " successfully";
-            if (!empty($uploadErrors)) {
-                $_SESSION['message'] .= ". " . implode(" ", $uploadErrors);
-            }
+            add_log('FILE_UPLOADED', "Folder: $selectedFolder - Files: " . count($uploadedFiles) . " uploaded");
+            echo json_encode([
+                'success' => true, 
+                'message' => $message,
+                'files' => $uploadedFiles,
+                'count' => count($uploadedFiles)
+            ]);
         } else {
-            $_SESSION['error'] = implode(" ", $uploadErrors);
+            echo json_encode(['success' => false, 'error' => implode(" ", $uploadErrors)]);
         }
-        if ($isAjax) {
-            echo json_encode(['success' => true]);
-            exit;
-        } else {
-            header('Location: admin.php');
-            exit;
-        }
-    }
-
-    $media = get_all_media($selectedFolder);
-    $settings = get_settings($selectedFolder);
-
-    // Handle create folder
-    if (isset($_POST['create_folder'])) {
-        $newFolder = trim($_POST['new_folder']);
-        if (!is_dir($newFolder) && mkdir($newFolder, 0755)) {
-            get_settings($newFolder); // Initialize
-            $_SESSION['admin_folder'] = $newFolder;
-            $_SESSION['message'] = "Project '$newFolder' created successfully";
-        } else {
-            $_SESSION['error'] = "Failed to create project";
-        }
-        header('Location: admin.php');
         exit;
     }
 
+    // Handle get_logs ajax request
+if (isset($_GET['get_logs']) && is_admin_account()) {
+    $logs = get_all_logs();
+    $logs = array_reverse($logs); // newest first
+    if (empty($logs)) {
+        echo '<div style="opacity: 0.6;">No logs available</div>';
+    } else {
+        foreach ($logs as $log) {
+            echo "[" . htmlspecialchars($log['datetime']) . "] " . htmlspecialchars($log['username']) . " (" . htmlspecialchars($log['ip']) . ") " . htmlspecialchars($log['action']) . ": " . htmlspecialchars($log['details']) . "<br>";
+        }
+    }
+    exit;
+}
+
+$media = get_all_media($selectedFolder);
+    $settings = get_settings($selectedFolder);
+    
+    // Calculate total slideshow cycle time
+    $totalTime = 0;
+    $imageTime = intval($settings['timer']);
+    foreach ($media as $item) {
+        $totalTime += $imageTime;
+    }
+
+    // Format total time
+    $hours = floor($totalTime / 3600);
+    $minutes = floor(($totalTime % 3600) / 60);
+    $seconds = $totalTime % 60;
+    $totalTimeFormatted = '';
+    if ($hours > 0) $totalTimeFormatted .= $hours . 'h ';
+    if ($minutes > 0) $totalTimeFormatted .= $minutes . 'm ';
+    $totalTimeFormatted .= $seconds . 's';
+
+    // Handle create folder
+if (isset($_POST['create_folder'])) {
+    $newFolder = trim($_POST['new_folder']);
+    if (!is_dir($newFolder) && mkdir($newFolder, 0755)) {
+        get_settings($newFolder); // Initialize
+        $_SESSION['admin_folder'] = $newFolder;
+        add_log('PROJECT_CREATED', "Project: $newFolder");
+        echo json_encode(['success' => true, 'message' => "Project '$newFolder' created successfully"]);
+    } else {
+        echo json_encode(['success' => false, 'error' => "Failed to create project"]);
+    }
+    exit;
+}
+
     // Handle delete file
 if (isset($_POST['delete_file'])) {
-    $file = $selectedFolder . '/' . basename($_POST['delete_file']);
-    if (file_exists($file)) {
-        unlink($file);
-        // Remove from sequence
-        $settings = get_settings($selectedFolder);
-        $sequence = $settings['sequence'] ?? [];
-        if (($key = array_search(basename($_POST['delete_file']), $sequence)) !== false) {
-            unset($sequence[$key]);
-            $settings['sequence'] = array_values($sequence);
-            save_settings($selectedFolder, $settings);
+    $filename = basename($_POST['delete_file']);
+    $file = $selectedFolder . '/' . $filename;
+    
+    // Realpath validation for Linux case sensitivity (PHP 7 compatible)
+    $realFile = realpath($file);
+    $realFolder = rtrim(realpath($selectedFolder), '/\\');
+    
+    if ($realFile && $realFolder && strpos($realFile, $realFolder . DIRECTORY_SEPARATOR) === 0) {
+        if (unlink($realFile)) {
+            // Remove from sequence properly
+            $settings = get_settings($selectedFolder);
+            $sequence = $settings['sequence'] ?? [];
+            if (($key = array_search($filename, $sequence)) !== false) {
+                unset($sequence[$key]);
+                $settings['sequence'] = array_values($sequence);
+                save_settings($selectedFolder, $settings);
+            }
+            add_log('FILE_DELETED', "Folder: $selectedFolder - File: $filename");
+            echo json_encode(['success' => true, 'message' => 'File deleted successfully']);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to delete file']);
         }
-        $_SESSION['message'] = "File deleted successfully";
     } else {
-        $_SESSION['error'] = "File not found";
+        http_response_code(404);
+        echo json_encode(['error' => 'File not found']);
     }
     exit;
 }
 
 if (isset($_POST['move_temp'])) {
-    $file = basename($_POST['move_temp']);
-    $tempPath = $tempDir . '/' . $file;
-    $destPath = $selectedFolder . '/' . $file;
-    if (file_exists($tempPath)) {
-        if (rename($tempPath, $destPath)) {
+    $filename = basename($_POST['move_temp']);
+    $tempPath = $tempDir . '/' . $filename;
+    $destPath = $selectedFolder . '/' . $filename;
+    
+    // Realpath validation for Linux case sensitivity
+    $realTempFile = realpath($tempPath);
+    $realTempDir = rtrim(realpath($tempDir), '/\\');
+    $realDestDir = rtrim(realpath($selectedFolder), '/\\');
+    
+    if ($realTempFile && $realTempDir && strpos($realTempFile, $realTempDir . DIRECTORY_SEPARATOR) === 0 && $realDestDir) {
+        $realDestFile = $realDestDir . DIRECTORY_SEPARATOR . $filename;
+        if (rename($realTempFile, $realDestFile)) {
             // Add to sequence
             $settings = get_settings($selectedFolder);
-            $settings['sequence'][] = $file;
+            $settings['sequence'][] = $filename;
             save_settings($selectedFolder, $settings);
             echo json_encode(['success' => true]);
         } else {
@@ -197,21 +290,29 @@ if (isset($_POST['move_temp'])) {
         }
     } else {
         http_response_code(404);
-        echo json_encode(['error' => 'File not found']);
+        echo json_encode(['error' => 'File not found in temp']);
     }
     exit;
 }
 
 if (isset($_POST['copy_temp'])) {
-    $file = basename($_POST['copy_temp']);
-    $tempPath = $tempDir . '/' . $file;
-    $destPath = $selectedFolder . '/' . $file;
-    if (file_exists($tempPath)) {
-        if (copy($tempPath, $destPath)) {
+    $filename = basename($_POST['copy_temp']);
+    $tempPath = $tempDir . '/' . $filename;
+    $destPath = $selectedFolder . '/' . $filename;
+    
+    // Realpath validation for Linux case sensitivity
+    $realTempFile = realpath($tempPath);
+    $realTempDir = rtrim(realpath($tempDir), '/\\');
+    $realDestDir = rtrim(realpath($selectedFolder), '/\\');
+    
+    if ($realTempFile && $realTempDir && strpos($realTempFile, $realTempDir . DIRECTORY_SEPARATOR) === 0 && $realDestDir) {
+        $realDestFile = $realDestDir . DIRECTORY_SEPARATOR . $filename;
+        if (copy($realTempFile, $realDestFile)) {
             // Add to sequence
             $settings = get_settings($selectedFolder);
-            $settings['sequence'][] = $file;
+            $settings['sequence'][] = $filename;
             save_settings($selectedFolder, $settings);
+            add_log('FILE_ADDED_FROM_TEMP', "Folder: $selectedFolder - File: $filename");
             echo json_encode(['success' => true]);
         } else {
             http_response_code(500);
@@ -219,42 +320,33 @@ if (isset($_POST['copy_temp'])) {
         }
     } else {
         http_response_code(404);
-        echo json_encode(['error' => 'File not found']);
+        echo json_encode(['error' => 'File not found in temp']);
     }
     exit;
 }
 
-if (isset($_POST['copy_to_temp'])) {
-    $file = basename($_POST['copy_to_temp']);
-    $srcPath = $selectedFolder . '/' . $file;
-    $destPath = $tempDir . '/' . $file;
-    if (file_exists($srcPath)) {
-        if (copy($srcPath, $destPath)) {
-            echo json_encode(['success' => true]);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to copy file']);
-        }
-    } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'File not found']);
-    }
-    exit;
-}
+
 
 if (isset($_POST['duplicate_file'])) {
-    $file = basename($_POST['duplicate_file']);
-    $srcPath = $selectedFolder . '/' . $file;
-    $ext = pathinfo($file, PATHINFO_EXTENSION);
-    $base = pathinfo($file, PATHINFO_FILENAME);
-    $newName = $base . '_copy.' . $ext;
-    $destPath = $selectedFolder . '/' . $newName;
-    if (file_exists($srcPath)) {
-        if (copy($srcPath, $destPath)) {
+    $filename = basename($_POST['duplicate_file']);
+    $srcPath = $selectedFolder . '/' . $filename;
+    
+    // Realpath validation for Linux case sensitivity
+    $realSrcFile = realpath($srcPath);
+    $realFolder = rtrim(realpath($selectedFolder), '/\\');
+    
+    if ($realSrcFile && $realFolder && strpos($realSrcFile, $realFolder . DIRECTORY_SEPARATOR) === 0) {
+        $ext = pathinfo($filename, PATHINFO_EXTENSION);
+        $base = pathinfo($filename, PATHINFO_FILENAME);
+        $newName = $base . '_copy.' . $ext;
+        $realDestFile = $realFolder . DIRECTORY_SEPARATOR . $newName;
+        
+        if (copy($realSrcFile, $realDestFile)) {
             // Add to sequence
             $settings = get_settings($selectedFolder);
             $settings['sequence'][] = $newName;
             save_settings($selectedFolder, $settings);
+            add_log('FILE_DUPLICATED', "Folder: $selectedFolder - Original: $filename, New: $newName");
             echo json_encode(['success' => true]);
         } else {
             http_response_code(500);
@@ -268,14 +360,23 @@ if (isset($_POST['duplicate_file'])) {
 }
 
 if (isset($_POST['delete_temp'])) {
-    $file = basename($_POST['delete_temp']);
-    $path = $tempDir . '/' . $file;
-    if (file_exists($path)) {
-        unlink($path);
-        echo json_encode(['success' => true]);
+    $filename = basename($_POST['delete_temp']);
+    $path = $tempDir . '/' . $filename;
+    
+    // Realpath validation for Linux case sensitivity (PHP 7 compatible)
+    $realFile = realpath($path);
+    $realTempDir = rtrim(realpath($tempDir), '/\\');
+    
+    if ($realFile && $realTempDir && strpos($realFile, $realTempDir . DIRECTORY_SEPARATOR) === 0) {
+        if (unlink($realFile)) {
+            echo json_encode(['success' => true]);
+        } else {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to delete temp file']);
+        }
     } else {
         http_response_code(404);
-        echo json_encode(['error' => 'File not found']);
+        echo json_encode(['error' => 'File not found in temp']);
     }
     exit;
 }
@@ -289,7 +390,36 @@ if (isset($_POST['delete_temp'])) {
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // Live log auto refresh
+            setInterval(function() {
+                if ($('#logPanel').hasClass('show')) {
+                    $.get('admin.php?get_logs=1', function(data) {
+                        $('#logContainer').html(data);
+                    });
+                }
+            }, 5000);
+            document.addEventListener('DOMContentLoaded', function() {
+                const toggleBtn = document.getElementById('togglePassword');
+                if (toggleBtn) {
+                    toggleBtn.addEventListener('click', function() {
+                        const input = document.getElementById('passwordInput');
+                        const icon = this.querySelector('i');
+                        if (input.type === 'password') {
+                            input.type = 'text';
+                            icon.classList.remove('fa-eye');
+                            icon.classList.add('fa-eye-slash');
+                        } else {
+                            input.type = 'password';
+                            icon.classList.remove('fa-eye-slash');
+                            icon.classList.add('fa-eye');
+                        }
+                    });
+                }
+            });
+        </script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
         <script src="http://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
         <style>
             body { padding: 10px; background: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 14px; }
@@ -432,7 +562,9 @@ if (isset($_POST['delete_temp'])) {
                                 </div>
                                 <div class="col-md-4">
                                     <strong>Current Project:</strong> <span class="badge badge-secondary"><?= $selectedFolder ?></span><br>
-                                    <button type="button" class="btn btn-outline-info btn-sm mt-2" data-toggle="modal" data-target="#userManagementModal">User Management</button>
+                                    <?php if (is_admin_account()): ?>
+<button type="button" class="btn btn-outline-info btn-sm mt-2" data-toggle="modal" data-target="#userManagementModal">User Management</button>
+<?php endif; ?>
                                 </div>
                             </div>
                         </div>
@@ -467,9 +599,9 @@ if (isset($_POST['delete_temp'])) {
                          </div>
                      </div>
                      <div class="card mb-3 left-card">
-                         <div class="card-header d-flex justify-content-between align-items-center">
-                             <div>
-                                 <h6>All Media (<?= count(array_diff(scandir($tempDir), ['.', '..'])) ?>)</h6>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="temp-heading">All Media (<?= count(array_diff(scandir($tempDir), ['.', '..'])) ?>)</h6>
                              </div>
                              <div>
                                  <button id="gridView" class="btn btn-sm btn-outline-secondary" title="Grid View"><i class="fas fa-th"></i></button>
@@ -479,6 +611,12 @@ if (isset($_POST['delete_temp'])) {
                          <div class="card-body temp-grid" id="tempList" style="max-height: 400px; overflow-y: auto;">
                              <?php
                              $tempFiles = array_diff(scandir($tempDir), ['.', '..']);
+                             
+                             // Sort temp files by NEWEST upload first (modified time descending)
+                             usort($tempFiles, function($a, $b) use ($tempDir) {
+                                 return filemtime($tempDir.'/'.$b) - filemtime($tempDir.'/'.$a);
+                             });
+                             
                              foreach ($tempFiles as $file) {
                                  $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
                                  if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'mp4', 'avi', 'mov', 'wmv'])) {
@@ -514,10 +652,13 @@ if (isset($_POST['delete_temp'])) {
                 </div>
                 <div class="col-md-8">
                     <div class="card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <h6>Media (<?= count($media) ?>)</h6>
-                            <button id="saveOrder" class="btn btn-success btn-sm">Save Order</button>
-                        </div>
+                         <div class="card-header d-flex justify-content-between align-items-center">
+                             <h6>Media (<?= count($media) ?>)</h6>
+                             <div class="d-flex align-items-center">
+                                 <span class="text-muted mr-3"><strong>Total Cycle Time:</strong> <?= $totalTimeFormatted ?></span>
+                                 <button id="saveOrder" class="btn btn-success btn-sm">Save Order</button>
+                             </div>
+                         </div>
                         <div class="card-body">
                             <small class="text-muted mb-2 d-block">Drag images to reorder</small>
                             <div id="imageList">
@@ -542,6 +683,18 @@ if (isset($_POST['delete_temp'])) {
                                                 <div class="col-6">
                                                     <div class="card-body">
                                                         <h6 class="card-title"><?= basename($item) ?></h6>
+                                                        <?php if (isset($videoDurations[basename($item)])): ?>
+                                                        <small class="text-muted">
+                                                            <?php 
+                                                            $d = $videoDurations[basename($item)]; 
+                                                            if ($d > 0):
+                                                                $m = floor($d / 60);
+                                                                $s = $d % 60;
+                                                                echo '<span class="badge badge-info">Video: '.($m > 0 ? $m.'m ' : '').$s.'s</span>';
+                                                            endif;
+                                                            ?>
+                                                        </small>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </div>
                                                 <div class="col-3">
@@ -559,6 +712,36 @@ if (isset($_POST['delete_temp'])) {
                     </div>
                 </div>
             </div>
+
+<?php if (is_admin_account()): ?>
+<div class="card mt-3">
+    <div class="card-header" data-toggle="collapse" data-target="#logPanel" style="cursor: pointer;">
+        <h6><i class="fas fa-list-alt"></i> System Logs</h6>
+    </div>
+    <div id="logPanel" class="collapse">
+        <div class="card-body">
+            <div class="d-flex justify-content-end mb-2">
+                <button id="clearLogsBtn" class="btn btn-sm btn-outline-danger">Clear Logs</button>
+            </div>
+            <div style="max-height: 300px; overflow-y: auto; background: #1e1e1e; color: #d4d4d4; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px;">
+                <div id="logContainer">
+                <?php
+                $logs = get_all_logs();
+                $logs = array_reverse($logs); // newest first
+                if (empty($logs)) {
+                    echo '<div style="opacity: 0.6;">No logs available</div>';
+                } else {
+                    foreach ($logs as $log) {
+                        echo "[" . htmlspecialchars($log['datetime']) . "] " . htmlspecialchars($log['username']) . " (" . htmlspecialchars($log['ip']) . ") " . htmlspecialchars($log['action']) . ": " . htmlspecialchars($log['details']) . "<br>";
+                    }
+                }
+                ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
             <!-- User Management Modal -->
             <div class="modal fade" id="userManagementModal" tabindex="-1">
@@ -648,9 +831,14 @@ if (isset($_POST['delete_temp'])) {
 
             $(document).on('click', '.delete-btn', function() {
                 var filename = $(this).data('file');
+                var card = $(this).closest('.image-card');
                 customConfirm('Delete ' + filename + '?', function() {
-                    $.post('admin.php', { delete_file: filename, folder: '<?= $selectedFolder ?>' }, function() {
-                        location.reload();
+                    $.post('admin.php', { delete_file: filename }, function() {
+                        card.fadeOut(300, function() { 
+                            $(this).remove(); 
+                            showStatus('File deleted', 'success');
+                            updateMediaCounts();
+                        });
                     });
                 });
             });
@@ -697,6 +885,18 @@ if (isset($_POST['delete_temp'])) {
                         location.reload();
                     });
                 });
+            });
+
+            $('#togglePassword').click(function() {
+                var input = $('#passwordInput');
+                var icon = $(this).find('i');
+                if (input.attr('type') === 'password') {
+                    input.attr('type', 'text');
+                    icon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    input.attr('type', 'password');
+                    icon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
             });
 
             $('#folderSelect').change(function() {
@@ -793,8 +993,96 @@ if (isset($_POST['delete_temp'])) {
                     data: formData,
                     processData: false,
                     contentType: false,
-                    success: function() {
-                        location.reload();
+                    success: function(res) {
+                        var data = JSON.parse(res);
+                        if (data.success) {
+                            showStatus(data.message, 'success');
+                            // Append all new files dynamically using ACTUAL server filenames
+                            for (var i = 0; i < data.files.length; i++) {
+                                let actualFilename = data.files[i];
+                                let ext = actualFilename.split('.').pop().toLowerCase();
+                                let isVideo = ['mp4', 'avi', 'mov', 'wmv'].includes(ext);
+                                
+                                var html = '<div class="card mb-2 image-card" data-file="'+actualFilename+'">';
+                                html += '<div class="row no-gutters">';
+                                html += '<div class="col-1 d-flex align-items-center justify-content-center"><span class="drag-handle">⋮⋮</span></div>';
+                                html += '<div class="col-2">';
+                                if (isVideo) {
+                                    html += '<video class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;"><source src="<?= $selectedFolder ?>/'+actualFilename+'"></video><div class="video-play-indicator"></div>';
+                                } else {
+                                    html += '<img src="<?= $selectedFolder ?>/'+actualFilename+'" class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;">';
+                                }
+                                html += '</div>';
+                                html += '<div class="col-6"><div class="card-body"><h6 class="card-title">'+actualFilename+'</h6></div></div>';
+                                html += '<div class="col-3"><div class="card-body text-right">';
+                                html += '<button class="btn btn-sm btn-success view-btn" data-image="<?= $selectedFolder ?>/'+actualFilename+'">View</button> ';
+                                html += '<button class="btn btn-sm btn-danger delete-btn" data-file="'+actualFilename+'">Delete</button>';
+                                html += '</div></div>';
+                                html += '</div></div>';
+                                
+                            // Hide "No media" text
+                            $('#imageList').find('p:contains("No media.")').hide();
+                            
+                            $('#imageList').append(html);
+                            }
+                            // Load video metadata for all new added videos
+                             $('#imageList').find('video').each(function() {
+                                 const video = this;
+                                 const card = $(this).closest('.image-card');
+                                 // Only add badge if not already present
+                                 if (card.find('.badge-info').length === 0) {
+                                     this.addEventListener('loadedmetadata', function() {
+                                         const duration = Math.round(this.duration);
+                                         const m = Math.floor(duration / 60);
+                                         const s = duration % 60;
+                                         
+                                         // Add duration badge dynamically only once
+                                         card.find('.card-body').first().append('<small class="text-muted"><span class="badge badge-info">Video: ' + (m > 0 ? m + 'm ' : '') + s + 's</span></small>');
+                                         
+                                         updateMediaCounts();
+                                     });
+                                     video.load();
+                                 }
+                             });
+                            updateMediaCounts();
+                            // Also update temp folder count and add new thumbnail dynamically in temp list
+                            for (var i = 0; i < data.files.length; i++) {
+                                let actualFilename = data.files[i];
+                                let ext = actualFilename.split('.').pop().toLowerCase();
+                                let isVideo = ['mp4', 'avi', 'mov', 'wmv'].includes(ext);
+                                
+                                var tempHtml = '<div class="temp-item mb-2" draggable="true" data-file="'+actualFilename+'" data-video="'+(isVideo ? '1' : '0')+'">';
+                                tempHtml += '<div class="temp-media-container">';
+                                if (isVideo) {
+                                    tempHtml += '<video class="temp-media" preload="metadata"><source src="temp/'+actualFilename+'"></video>';
+                                    tempHtml += '<div class="video-play-indicator"></div>';
+                                } else {
+                                    tempHtml += '<img src="temp/'+actualFilename+'" class="temp-media" alt="'+actualFilename+'">';
+                                }
+                                tempHtml += '<div class="temp-overlay temp-grid-overlay">';
+                                tempHtml += '<button class="btn btn-sm btn-info view-temp mr-1" title="View" data-file="'+actualFilename+'"><i class="fas fa-eye"></i></button>';
+                                tempHtml += '<button class="btn btn-sm btn-success add-temp mr-1" title="Add to project" data-file="'+actualFilename+'"><i class="fas fa-plus"></i></button>';
+                                tempHtml += '<a href="temp/'+actualFilename+'" download class="btn btn-sm btn-warning mr-1" title="Download"><i class="fas fa-download"></i></a>';
+                                tempHtml += '<button class="btn btn-sm btn-danger delete-temp" title="Delete" data-file="'+actualFilename+'"><i class="fas fa-trash"></i></button>';
+                                tempHtml += '</div></div>';
+                                tempHtml += '<div class="temp-filename"><small>'+actualFilename+'</small></div>';
+                                tempHtml += '<div class="temp-list-overlay">';
+                                tempHtml += '<button class="btn btn-sm btn-info view-temp mr-1" title="View" data-file="'+actualFilename+'"><i class="fas fa-eye"></i></button>';
+                                tempHtml += '<button class="btn btn-sm btn-success add-temp mr-1" title="Add to project" data-file="'+actualFilename+'"><i class="fas fa-plus"></i></button>';
+                                tempHtml += '<a href="temp/'+actualFilename+'" download class="btn btn-sm btn-warning mr-1" title="Download"><i class="fas fa-download"></i></a>';
+                                tempHtml += '<button class="btn btn-sm btn-danger delete-temp" title="Delete" data-file="'+actualFilename+'"><i class="fas fa-trash"></i></button>';
+                                tempHtml += '</div>';
+                                tempHtml += '</div>';
+                                
+                                $('#tempList').prepend(tempHtml);
+                            }
+                            // Update temp folder count from server value
+                            const newTempCount = parseInt($('h6.temp-heading').text().match(/\d+/)[0]) + data.count;
+                            $('h6.temp-heading').html('All Media (' + newTempCount + ')');
+                            $('#imageInput').val('');
+                        } else {
+                            showStatus(data.error, 'danger');
+                        }
                     },
                     error: function() {
                         showStatus('Upload failed', 'danger');
@@ -824,6 +1112,8 @@ if (isset($_POST['delete_temp'])) {
                     var data = JSON.parse(res);
                     if (data.success) {
                         showStatus('Settings saved!', 'success');
+                        // Auto update total cycle time with new timer value
+                        updateMediaCounts();
                     } else {
                         showStatus('Save failed', 'danger');
                     }
@@ -859,11 +1149,51 @@ if (isset($_POST['delete_temp'])) {
             $(document).on('click', '.add-temp', function(e) {
                 e.stopPropagation();
                 var file = $(this).data('file');
+                var item = $(this).closest('.temp-item');
                 $.post('admin.php', { copy_temp: file, folder: '<?= $selectedFolder ?>' }, function(res) {
                     var data = JSON.parse(res);
                     if (data.success) {
                         showStatus('File copied to project!', 'success');
-                        location.reload();
+                        // Append new card dynamically without reload
+                        var ext = file.split('.').pop().toLowerCase();
+                        var isVideo = ['mp4', 'avi', 'mov', 'wmv'].includes(ext);
+                        var html = '<div class="card mb-2 image-card" data-file="'+file+'">';
+                        html += '<div class="row no-gutters">';
+                        html += '<div class="col-1 d-flex align-items-center justify-content-center"><span class="drag-handle">⋮⋮</span></div>';
+                        html += '<div class="col-2">';
+                        if (isVideo) {
+                            html += '<video class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;"><source src="<?= $selectedFolder ?>/'+file+'"></video><div class="video-play-indicator"></div>';
+                        } else {
+                            html += '<img src="<?= $selectedFolder ?>/'+file+'" class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;">';
+                        }
+                        html += '</div>';
+                        html += '<div class="col-6"><div class="card-body"><h6 class="card-title">'+file+'</h6></div></div>';
+                        html += '<div class="col-3"><div class="card-body text-right">';
+                        html += '<button class="btn btn-sm btn-success view-btn" data-image="<?= $selectedFolder ?>/'+file+'">View</button> ';
+                        html += '<button class="btn btn-sm btn-danger delete-btn" data-file="'+file+'">Delete</button>';
+                        html += '</div></div>';
+                        html += '</div></div>';
+                        
+                        $('#imageList').append(html);
+                        // Load video metadata
+                        $('#imageList').find('video').each(function() {
+                            const video = this;
+                            const card = $(this).closest('.image-card');
+                             this.addEventListener('loadedmetadata', function() {
+                                 const duration = Math.round(this.duration);
+                                 const m = Math.floor(duration / 60);
+                                 const s = duration % 60;
+                                 // Add duration badge dynamically only once
+                                 if (card.find('.badge-info').length === 0) {
+                                     card.find('.card-body').first().append('<small class="text-muted"><span class="badge badge-info">Video: ' + (m > 0 ? m + 'm ' : '') + s + 's</span></small>');
+                                 }
+                                 updateMediaCounts();
+                             });
+                            video.load();
+                        });
+                        // DO NOT remove from temp! Just show success message
+                        showStatus('File copied successfully!', 'success');
+                        updateMediaCounts();
                     } else {
                         showStatus('Failed to copy file: ' + (data.error || 'Unknown error'), 'danger');
                     }
@@ -875,6 +1205,7 @@ if (isset($_POST['delete_temp'])) {
             // Drag and drop from temp to media list
             $('.temp-item').on('dragstart', function(e) {
                 e.originalEvent.dataTransfer.setData('text', $(this).data('file'));
+                e.originalEvent.dataTransfer.setData('isVideo', $(this).data('video'));
             });
 
             $('#imageList').on('dragover', function(e) {
@@ -886,17 +1217,39 @@ if (isset($_POST['delete_temp'])) {
                 e.preventDefault();
                 $(this).removeClass('drag-over');
                 var file = e.originalEvent.dataTransfer.getData('text');
+                var isVideo = e.originalEvent.dataTransfer.getData('isVideo') === '1';
                 if (file) {
-                    $.post('admin.php', { move_temp: file, folder: '<?= $selectedFolder ?>' }, function(res) {
+                    $.post('admin.php', { copy_temp: file, folder: '<?= $selectedFolder ?>' }, function(res) {
                         var data = JSON.parse(res);
                         if (data.success) {
-                            showStatus('File moved to project!', 'success');
-                            location.reload();
+                            showStatus('File copied to project!', 'success');
+                            // Append new card dynamically
+                            var html = '<div class="card mb-2 image-card" data-file="'+file+'">';
+                            html += '<div class="row no-gutters">';
+                            html += '<div class="col-1 d-flex align-items-center justify-content-center"><span class="drag-handle">⋮⋮</span></div>';
+                            html += '<div class="col-2">';
+                            if (isVideo) {
+                                html += '<video class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;"><source src="<?= $selectedFolder ?>/'+file+'"></video><div class="video-play-indicator"></div>';
+                            } else {
+                                html += '<img src="<?= $selectedFolder ?>/'+file+'" class="img-thumbnail" style="width:100%; height:100px; object-fit:contain; background: #fff;">';
+                            }
+                            html += '</div>';
+                            html += '<div class="col-6"><div class="card-body"><h6 class="card-title">'+file+'</h6></div></div>';
+                            html += '<div class="col-3"><div class="card-body text-right">';
+                            html += '<button class="btn btn-sm btn-success view-btn" data-image="<?= $selectedFolder ?>/'+file+'">View</button> ';
+                            html += '<button class="btn btn-sm btn-danger delete-btn" data-file="'+file+'">Delete</button>';
+                            html += '</div></div>';
+                            html += '</div></div>';
+                            
+                            $('#imageList').append(html);
+                            // DO NOT remove from temp! Keep file permanently
+                            showStatus('File copied successfully!', 'success');
+                            updateMediaCounts();
                         } else {
-                            showStatus('Failed to move file: ' + (data.error || 'Unknown error'), 'danger');
+                            showStatus('Failed to copy file: ' + (data.error || 'Unknown error'), 'danger');
                         }
                     }).fail(function() {
-                        showStatus('Failed to move file', 'danger');
+                        showStatus('Failed to copy file', 'danger');
                     });
                 }
             });
@@ -905,17 +1258,16 @@ if (isset($_POST['delete_temp'])) {
             $(document).on('click', '.delete-temp', function(e) {
                 e.stopPropagation();
                 var file = $(this).data('file');
+                var tempItem = $(this).closest('.temp-item');
                 customConfirm('Delete ' + file + ' from temp? This cannot be undone.', function() {
-                    $.post('admin.php', { delete_temp: file }, function(res) {
-                        var data = JSON.parse(res);
-                        if (data.success) {
+                    $.post('admin.php', { delete_temp: file }, function() {
+                        tempItem.fadeOut(300, function() { 
+                            $(this).remove(); 
                             showStatus('File deleted from temp', 'success');
-                            location.reload();
-                        } else {
-                            showStatus('Failed to delete: ' + (data.error || ''), 'danger');
-                        }
-                    }).fail(function() {
-                        showStatus('Failed to delete', 'danger');
+                            // Update temp count
+                            const newTempCount = parseInt($('h6.temp-heading').text().match(/\d+/)[0]) - 1;
+                            $('h6.temp-heading').html('All Media (' + newTempCount + ')');
+                        });
                     });
                 });
             });
@@ -935,6 +1287,84 @@ if (isset($_POST['delete_temp'])) {
             function showStatus(message, type) {
                 $('#statusMessage').html('<div class="alert alert-' + type + ' alert-dismissible fade show"><button type="button" class="close" data-dismiss="alert">&times;</button>' + message + '</div>');
                 setTimeout(() => $('#statusMessage').empty(), 5000);
+            }
+            
+            // Get accurate video durations using HTML5 API
+            $(document).ready(function() {
+                let timerValue = parseInt($('#timerValue').val()) || 3;
+                let totalTime = 0;
+                let processedCount = 0;
+                let mediaCount = $('.image-card').length;
+                
+                $('.image-card').each(function() {
+                    const card = $(this);
+                    const video = card.find('video')[0];
+                    if (video) {
+                        video.addEventListener('loadedmetadata', function() {
+                            const duration = Math.round(this.duration);
+                            const m = Math.floor(duration / 60);
+                            const s = duration % 60;
+                            
+                            // REMOVE ANY EXISTING BADGES FIRST to prevent duplicates
+                            card.find('.card-body').first().find('.badge-info').parent().remove();
+                            // Add duration badge ONLY ONCE
+                            card.find('.card-body').first().append('<small class="text-muted"><span class="badge badge-info">Video: ' + (m > 0 ? m + 'm ' : '') + s + 's</span></small>');
+                            
+                            // Add video duration + timer
+                            totalTime += duration + timerValue;
+                            processedCount++;
+                            
+                            if (processedCount === mediaCount) {
+                                updateTotalTime(totalTime);
+                            }
+                        });
+                        video.load();
+                    } else {
+                        // Image file, just add timer
+                        totalTime += timerValue;
+                        processedCount++;
+                        
+                        if (processedCount === mediaCount) {
+                            updateTotalTime(totalTime);
+                        }
+                    }
+                });
+            });
+            
+            function updateTotalTime(totalSeconds) {
+                const hours = Math.floor(totalSeconds / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+                let formatted = '';
+                if (hours > 0) formatted += hours + 'h ';
+                if (minutes > 0) formatted += minutes + 'm ';
+                formatted += seconds + 's';
+                
+                $('strong:contains("Total Cycle Time")').parent().html('<strong>Total Cycle Time:</strong> ' + formatted);
+            }
+
+            function updateMediaCounts() {
+                // Update media count - ONLY the right side heading, NOT temp heading!
+                const mediaCount = $('.image-card').length;
+                $('#imageList').closest('.card').find('.card-header h6').html('Media (' + mediaCount + ')');
+                
+                // Recalculate total time
+                let timerValue = parseInt($('#timerValue').val()) || 3;
+                let totalTime = 0;
+                let processedCount = 0;
+                
+                $('.image-card').each(function() {
+                    const card = $(this);
+                    const video = card.find('video')[0];
+                    if (video && video.duration > 0) {
+                        const duration = Math.round(video.duration);
+                        totalTime += duration + timerValue;
+                    } else {
+                        totalTime += timerValue;
+                    }
+                });
+                
+                updateTotalTime(totalTime);
             }
         </script>
         <footer style="text-align: center; padding: 10px; background: #f8f9fa; margin-top: 20px;">
