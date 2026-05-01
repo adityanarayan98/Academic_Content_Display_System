@@ -9,6 +9,12 @@ if (isset($_POST['set_admin_folder'])) {
 }
 
 if (isset($_POST['add_user']) || isset($_POST['update_user'])) {
+    if (!is_admin_account()) {
+        add_log('PERMISSION_DENIED', "Attempted user management access denied");
+        http_response_code(403);
+        echo json_encode(['error' => 'Only administrator can manage users']);
+        exit;
+    }
     $username = trim($_POST['username']);
     $password = $_POST['password'];
     if (empty($username) || empty($password)) {
@@ -29,16 +35,24 @@ if (isset($_POST['add_user']) || isset($_POST['update_user'])) {
         exit;
     }
     save_user($username, $password);
+    add_log(($isUpdate ? 'USER_UPDATED' : 'USER_CREATED'), "User: $username");
     echo json_encode(['success' => true]);
     exit;
 }
 
 if (isset($_POST['delete_user'])) {
+    if (!is_admin_account()) {
+        add_log('PERMISSION_DENIED', "Attempted user deletion access denied");
+        http_response_code(403);
+        echo json_encode(['error' => 'Only administrator can manage users']);
+        exit;
+    }
     $username = trim($_POST['delete_user']);
     $allSettings = json_decode(file_get_contents(SETTINGS_FILE), true);
     if (isset($allSettings['users'][$username])) {
         unset($allSettings['users'][$username]);
         file_put_contents(SETTINGS_FILE, json_encode($allSettings, JSON_PRETTY_PRINT));
+        add_log('USER_DELETED', "User: $username");
         echo json_encode(['success' => true]);
     } else {
         http_response_code(400);
@@ -102,5 +116,12 @@ if (!$updated) {
 }
 
 save_settings($folder, $settings);
+
+$changed = [];
+if (isset($_POST['timer'])) $changed[] = "timer={$_POST['timer']}s";
+if (isset($_POST['orientation'])) $changed[] = "orientation={$_POST['orientation']}";
+if (isset($_POST['sequence'])) $changed[] = "order_saved";
+
+add_log('SETTINGS_UPDATED', "Folder: $folder - " . implode(', ', $changed));
 
 echo json_encode(['success' => true]);
