@@ -193,7 +193,7 @@ This project was created and is maintained by Aditya Narayan Sahoo. Contribution
 
 For issues, check file permissions, PHP errors, and browser console.
 
-<img width="1361" height="638" alt="image" src="https://github.com/user-attachments/assets/582ab714-8df6-48ce-b5ba-a45d755081c4" />
+<img width="680" height="219 alt="image" src="https://github.com/user-attachments/assets/582ab714-8df6-48ce-b5ba-a45d755081c4" />
 <img width="1356" height="645" alt="image" src="https://github.com/user-attachments/assets/d80be651-d9c1-4195-91b1-3b0e4aa95663" />
 <img width="599" height="508" alt="image" src="https://github.com/user-attachments/assets/08f49885-4c3f-4270-b7de-9c6ffd15169c" />
 <img width="1366" height="650" alt="image" src="https://github.com/user-attachments/assets/b5f198f3-e1ef-448d-8dc6-1926e840b5fd" />
