@@ -1,6 +1,6 @@
 <?php
 // Configuration File - Edit these settings
-define('ADMIN_PASSWORD', 'Aditya@2026'); // Change this to your secure password
+define('ADMIN_PASSWORD', 'Aditya'); // Change this to your secure password
 define('IMAGE_FOLDER', 'iq3');
 define('MAX_FILE_SIZE', 500 * 1024 * 1024); // 500MB
 define('ALLOWED_TYPES', ['jpg', 'jpeg', 'png', 'gif']);
