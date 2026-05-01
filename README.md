@@ -16,7 +16,11 @@ A web-based slideshow display system for managing and showing images and videos 
 - **Bulk Upload**: Upload multiple files at once.
 - **Preview Mode**: Test slideshow in a scaled-down window.
 - **Responsive Design**: Adapts to any screen size and orientation.
-- **Video Playback**: Autoplay videos with duration-based timing and muted audio.
+- **Video Playback**: Autoplay videos with duration-based timing, optional audio with user permission.
+- **Audio Permission System**: Modern browser policy compliant audio unlock with TV remote friendly interface.
+- **Total Cycle Time**: Automatically calculates and displays total slideshow runtime.
+- **Safe Viewport Handling**: Automatically adjusts for mobile/TV browser UI elements for perfect fullscreen fit.
+- **Admin Event Logging**: Complete system logging with 30 day retention, automatic rotation.
 - **User Authentication**: Multi-user support with hashed passwords and math captcha.
 - **AJAX Interface**: Real-time updates without page reloads.
 
@@ -36,7 +40,7 @@ A web-based slideshow display system for managing and showing images and videos 
 
 2. **Permissions**: Ensure the web server can write to the directory and subfolders. In XAMPP, right-click folder > Properties > Security > Give full control to user.
 
-3. **Initial Setup**: The system creates settings automatically. No database required.
+3. **Initial Setup**: The system creates settings automatically. No database required. All folders and configuration files are created on first load.
 
 ## Usage
 
@@ -66,6 +70,7 @@ After login, you'll see:
 - **Settings**: Configure timer and orientation
 - **Upload Media**: Add images/videos
 - **Media Management**: View, reorder, and delete media files
+- **System Logs**: Full event logging (admin only)
 
 ### 5. Creating a New Project
 
@@ -86,7 +91,7 @@ After login, you'll see:
 2. Supported formats: JPG, PNG, GIF, MP4, AVI, MOV, WMV.
 3. Max file size: 500MB per file.
 4. Click "Upload".
-5. Files are uploaded to the temp folder with unique names to avoid conflicts.
+5. Files are uploaded to the temp folder with unique names to avoid conflicts and automatically added to the currently selected project.
 
 ### 8. Managing Temp Media
 
@@ -106,32 +111,27 @@ After login, you'll see:
 - Click "Save Order" after reordering.
 - **Delete**: Click "Delete" on a media card, confirm deletion.
 
-### 10. Managing Temp Media
-
-- Temp media are stored in a temporary folder.
-- View thumbnails in the "Temp Media" section on the left.
-- Drag and drop temp items onto the media list to add them to the current project.
-- Click "Del" to delete temp files and free up storage.
-
-### 11. User Management (Admin)
+### 10. User Management (Admin Only)
 
 - Click "User Management" to add/edit users for restricted access.
 - Add users with username/password.
 - Users can view slideshows but not admin functions.
+- Regular users cannot access user management or system logs.
 
-### 12. Viewing the Slideshow
+### 11. Viewing the Slideshow
 
 - From project selection, click a project to start the slideshow.
 - Slideshow runs automatically based on timer settings.
-- Videos play with audio muted; duration based on video length or fallback to timer.
+- Audio permission prompt appears on first load for modern browsers. Click or press **OK** on TV remote to enable sound.
+- Videos play with optional audio once permission granted; duration based on video length plus configured timer delay.
 - Press F11 for fullscreen.
 
-### 13. Preview Mode
+### 12. Preview Mode
 
 - In admin panel, click "Preview Slideshow" to view in a smaller window.
 - Useful for testing without fullscreen.
 
-### 14. Logout
+### 13. Logout
 
 - Click "Logout" in admin panel or add `?logout` to URL.
 
@@ -140,26 +140,31 @@ After login, you'll see:
 - **Settings File**: Each project has a `settings.json` with timer, orientation, and sequence.
 - **Config.php**: Contains admin password and other constants. Edit for customization.
 - **Auto-Update**: Slideshow checks for new media every 5 seconds.
+- **Log System**: All admin actions are logged automatically, logs are kept for 30 days.
 
 ## Troubleshooting
 
+- **Audio not working**: Press OK/Enter/any key when the audio permission prompt appears. This is required once after every page refresh for modern browsers.
 - **Videos not playing**: Use MP4/H.264. In Opera Mini, videos may not work due to browser limitations.
 - **Upload fails**: Check file permissions and size limits.
 - **Stretched media**: Videos are fitted to width, centered, maintaining aspect ratio.
 - **Permission errors**: Ensure web server user has write access.
 - **Math captcha issues**: Refresh page if math problem is incorrect.
+- **Black bars on screen**: System automatically calculates safe viewport height, no adjustment needed.
 
 ## Security Notes
 
 - Change default admin password in `config.php`.
 - Use HTTPS in production.
 - Restrict access to admin panel.
+- Log files are protected with secure permissions.
 
 ## Display Compatibility
 
 - Designed for any display size (desktop, TV, projector).
 - Works in fullscreen mode (press F11).
 - Responsive design adapts to screen orientation.
+- TV remote compatible interface.
 
 ## Browser Support
 
@@ -186,5 +191,4 @@ This project was created and is maintained by Aditya Narayan Sahoo. Contribution
 
 ## Support
 
-For issues, check file permissions, PHP errors, and browser console.</content>
-<parameter name="filePath">README.md
+For issues, check file permissions, PHP errors, and browser console.
